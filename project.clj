@@ -5,7 +5,8 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.908"]
-                 [org.clojure/core.async "0.3.443"]]
+                 [org.clojure/core.async "0.3.443"]
+                 [expectations "2.2.0-rc3"]]
 
   :profiles {:dev {:src-paths ["dev"]
                    :dependencies [[figwheel-sidecar "0.5.13"]

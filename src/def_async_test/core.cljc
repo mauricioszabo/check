@@ -2,13 +2,16 @@
     (ns def-async-test.core
       (:require-macros [cljs.core.async.macros])
       (:require [cljs.core.async :refer [close! chan >! <! alts!]]
-                [clojure.test :refer-macros [deftest async testing]]
+                [clojure.test :refer-macros [deftest async testing do-report is]]
                 [clojure.string :as str]))
    :clj
     (ns def-async-test.core
       (:require [clojure.core.async :refer [close! chan >! <! go]]
-                [clojure.test :refer [deftest testing]]
                 [clojure.string :as str])))
+
+#?(:clj
+   (require '[expectations :refer [compare-expr ->failure-message]]
+            '[clojure.test :refer [deftest testing do-report is assert-expr]]))
 
 (defn cljs-env?
   "Take the &env from a macro, and tell whether we are expanding into cljs."
@@ -59,3 +62,38 @@
              (finally
                ~(if-let [teardown (:teardown opts)]
                   teardown))))))))
+
+(defmulti assert-arrow (fn [left arrow right] arrow))
+(defmethod assert-arrow '=> [left _ right]
+  (let [result (compare-expr left right left right)
+        unformatted-msg (->failure-message result)
+        msg (str/replace unformatted-msg #"^.*?\n" (str left " => " right))]
+    {:type (:type result)
+     :message msg
+     :expected left
+     :actual right}))
+
+(defmacro check [left arrow right]
+  `(let [result# (assert-arrow ~left (quote ~arrow) ~right)]
+     (do-report result#)))
+     ; result#))
+
+(defmethod assert-expr `assert-arrow [msg form]
+  (println form)
+  `(let [[left# arrow# right#] ~form
+         result# (assert-arrow left# arrow# right#)]
+     (do-report result#)
+     (-> result# :type (= :pass))))
+
+;
+;
+(println
+ ; (str/replace
+  (expectations/->failure-message
+   (expectations/compare-expr ["foo" "bar"] ["foo" "baz"] '["foo" "bar"] '["foo" "baz"])))
+  ; #"^.*?\n" "")
+;
+(require '[expectations :refer [expect]]
+         '[clojure.string :as str])
+; (expect ["foo" "bar"] ["foo" "baz"])
+; (expectations/run-all-tests)
