@@ -30,20 +30,20 @@
 (def-async-test "validates that teardown works" {}
   (is (= @collateral :resetted)))
 
-(def-async-test "wraps `assert` library" {}
-  ; (clojure.test/do-report {:type :pass :message "Failed"})
+(defn capture-test-out [f]
+  (binding [clojure.test/*test-out* (java.io.StringWriter.)]
+    (f)
+    (str clojure.test/*test-out*)))
 
-  (check (inc 10) => 21))
+(def-async-test "wraps `assert` library" {}
+  (check (capture-test-out #(check (inc 10) => 21))
+         => #"(?m)expected: 21.*\n.*was: 11")
+
+  (check (capture-test-out #(check (/ 10 0) => 0))
+         => #"Divide by zero"))
+
+(def-async-test "checks for `in` behavior" {}
+  (check (capture-test-out #(check [1 2 3] =includes=> 4))
+         => #"expected: 4.*\n.*was: 1"))
 
 (run-tests)
-
-(macroexpand '
-               (clojure.test/deftest foobar
-                 (check 10 => 20)))
-(macroexpand-1 '(check 10 => 20))
-               ; (def-async-test "wraps `assert` library" {}
-               ;   (check 10 => 20)))
-
-(macroexpand '
-               (clojure.test/is
-                (expectations/compare-expr 10 20 (quote 10) (quote 20))))
