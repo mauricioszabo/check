@@ -55,7 +55,7 @@ You can use `def-async-test` to generate a test that will timeout after a while
 
 ## License
 
-Copyright © 2018 FIXME
+Copyright © 2018 Maurício Szabo
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
