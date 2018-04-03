@@ -1,6 +1,5 @@
 (ns check.core-test
-  (:require [clojure.string :as str]
-            [expectations :refer [compare-expr ->failure-message]]))
+  (:require [clojure.string :as str]))
 
 #?(:cljs
    (require '[clojure.test :refer-macros [deftest testing run-tests]]
@@ -26,14 +25,19 @@
   (check (capture-test-out #(check (inc 10) => 21))
          => #"(?m)expected: 21.*\n.*was: 11"))
 
-(deftest check-captures-exceptions
-  (check (capture-test-out #(check (/ 10 0) => 0))
-         => #"Divide by zero"))
+#?(:clj
+   (deftest check-captures-exceptions
+     (check (capture-test-out #(check (/ 10 0) => 0))
+            => #"Divide by zero"))
+
+   :cljs
+   (deftest check-captures-exceptions
+     (check (capture-test-out #(check (js/Error. "Divide by zero") => 0))
+            => #"Divide by zero")))
+
 
 (deftest checks-for-in-behavior
   (check (capture-test-out #(check [1 2 3] =includes=> 4))
          => #"expected: 4.*\n.*was: 1"))
 
 (run-tests)
-
-; (println (capture-test-out #(check (inc 10) => 21)))
