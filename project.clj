@@ -1,9 +1,9 @@
-(defproject check "0.0.1"
+(defproject check "0.0.1-SNAPSHOT"
   :description "Test helpers"
   :url "https://github.com/mauricioszabo/check"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/core.async "0.3.443"]
+  :dependencies [[org.clojure/core.async "0.4.474"]
                  [expectations "2.2.0-rc3"]]
 
   :profiles {:dev {:src-paths ["dev"]
@@ -23,5 +23,15 @@
                                    :output-dir "target/js"
                                    :main check.all-tests
                                    :optimizations :none
+                                   :warnings {:single-segment-namespace false}
+                                   :target :nodejs}}
+                       {:source-paths ["src" "test"]
+                        :id "test"
+                        :compiler {:output-to "target/test.js"
+                                   :output-dir "target/test-js"
+                                   :output-wrapper true
+                                   :hashbang false
+                                   :pretty-print true
+                                   :optimizations :simple
                                    :warnings {:single-segment-namespace false}
                                    :target :nodejs}}]})
