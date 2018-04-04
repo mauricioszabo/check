@@ -10,5 +10,5 @@ pom.xml.asc
 .hgignore
 .hg/
 node_modules
-figweel_server.log
+figwheel_server.log
 package*.json
