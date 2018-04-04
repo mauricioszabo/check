@@ -17,21 +17,11 @@
   :plugins [[lein-cljsbuild "1.1.7"]]
 
   :cljsbuild {:builds [{:source-paths ["src" "test"]
-                        :id "test"
-                        :compiler {:output-to "target/test.js"
-                                   :optimizations :simple
-                                   :hashbang false
-                                   :language-in :ecmascript5
-                                   :output-wrapper true
-                                   :output-dir "target/js-test"
-                                   :pretty-print true
-                                   :target :nodejs}}
-                       {:source-paths ["src" "test"]
                         :id "dev"
                         :figwheel true
                         :compiler {:output-to "target/dev.js"
                                    :output-dir "target/js"
-                                   :main def-async-test.all-tests
+                                   :main check.all-tests
                                    :optimizations :none
                                    :warnings {:single-segment-namespace false}
                                    :target :nodejs}}]})
