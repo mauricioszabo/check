@@ -4,8 +4,9 @@
 
 #?(:cljs
    (require '[clojure.test :refer-macros [run-tests is]]
-            '[cljs.core.async :refer [chan >! timeout <!]]
-            '[check.async :refer-macros [def-async-test] :refer [await!]])
+            '[check.async-cljs :refer-macros [await! def-async-test]]
+            '[cljs.core.async :refer [chan >! timeout <!]])
+
    :clj
    (require '[clojure.test :refer [run-tests is]]
             '[clojure.core.async :refer [chan >! timeout go <!]]
