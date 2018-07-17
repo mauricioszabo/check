@@ -4,7 +4,9 @@ jdk:
   - oraclejdk8
 
 script:
-  - lein midje
+  - lein test
+  - lein cljsbuild once test
+  - node target/test.js
 
 before_install:
  - if [ ! -z "$GPG_SECRET_KEYS" ]; then echo $GPG_SECRET_KEYS | base64 --decode | gpg --import; fi
