@@ -28,7 +28,7 @@
   (if-cljs
     `(try
        (do-report ~(assert-arrow left arrow right))
-       (catch _ t#
+       (catch Throwable t#
          (do-report {:type :error
                      :message (str "Expected " (quote ~left) (quote ~arrow) (quote ~right))
                      :expected ~right
@@ -36,7 +36,7 @@
 
     `(try
        (do-report ~(assert-arrow left arrow right))
-       (catch Throwable t#
+       (catch js/Object t#
          (do-report {:type :error
                      :message (str "Expected " (quote ~left) (quote ~arrow) (quote ~right))
                      :expected ~right

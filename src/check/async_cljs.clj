@@ -26,7 +26,7 @@
             (test/testing ~description
               (js/setTimeout (fn []
                                (when-not (realized? mark-as-done#)
-                                 (test/is (throw "Async test error - not finalized"))
+                                 (test/is (throw (ex-info "Async test error - not finalized" {})))
                                  @mark-as-done#))
                              3000)
               ~@cmds
