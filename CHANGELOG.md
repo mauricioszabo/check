@@ -7,3 +7,4 @@
 - `=in=>` arrow function
 - `def-async-test` function
 - Some simple fixes to work with Clojure and ClojureScript
+- `=throws=>` arrow

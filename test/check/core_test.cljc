@@ -35,9 +35,12 @@
      (check (capture-test-out #(check (js/Error. "Divide by zero") => 0))
             => #"Divide by zero")))
 
-
 (deftest checks-for-in-behavior
   (check (capture-test-out #(check [1 2 3] =includes=> 4))
          => #"expected: 4.*\n.*was: 1"))
+
+(deftest checks-for-exception
+  (check (throw (ex-info "Exception" {:foo "BAR"}))
+         =throws=> clojure.lang.ExceptionInfo))
 
 (run-tests)

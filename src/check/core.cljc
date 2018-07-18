@@ -24,6 +24,19 @@
 (defmethod assert-arrow '=includes=> [left _ right]
   `(check (in ~left) ~'=> ~right))
 
+(def ^:private root-exception
+  (if-cljs 'js/Object 'Throwable))
+
+(defmethod assert-arrow '=throws=> [left _ right]
+  `(try
+     (let [res# ~left]
+       {:type :error
+        :message (str "Expected " (quote ~left) " to throw error " (quote ~right))
+        :expected ~right
+        :actual res#})
+     (catch ~root-exception t#
+       (check t# ~'=> ~right))))
+
 (defmacro check [left arrow right]
   (if-cljs
     `(try
