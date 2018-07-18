@@ -38,19 +38,10 @@
        (check t# ~'=> ~right))))
 
 (defmacro check [left arrow right]
-  (if-cljs
-    `(try
-       (do-report ~(assert-arrow left arrow right))
-       (catch js/Object t#
-         (do-report {:type :error
-                     :message (str "Expected " (quote ~left) (quote ~arrow) (quote ~right))
-                     :expected ~right
-                     :actual t#})))
-
-    `(try
-       (do-report ~(assert-arrow left arrow right))
-       (catch Throwable t#
-         (do-report {:type :error
-                     :message (str "Expected " (quote ~left) (quote ~arrow) (quote ~right))
-                     :expected ~right
-                     :actual t#})))))
+  `(try
+     (do-report ~(assert-arrow left arrow right))
+     (catch ~root-exception t#
+       (do-report {:type :error
+                   :message (str "Expected " (quote ~left) (quote ~arrow) (quote ~right))
+                   :expected ~right
+                   :actual t#}))))
