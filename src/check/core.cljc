@@ -25,7 +25,8 @@
   `(check (in ~left) ~'=> ~right))
 
 (def ^:private root-exception
-  (if-cljs 'js/Object 'Throwable))
+  #?(:cljs `js/Error
+     :clj `Throwable))
 
 (defmethod assert-arrow '=throws=> [left _ right]
   `(try
