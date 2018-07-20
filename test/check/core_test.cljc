@@ -41,6 +41,7 @@
 
 (deftest checks-for-exception
   (check (throw (ex-info "Exception" {:foo "BAR"}))
-         =throws=> clojure.lang.ExceptionInfo))
+         =throws=> #?(:cljs cljs.core.ExceptionInfo
+                            :clj clojure.lang.ExceptionInfo)))
 
 (run-tests)
