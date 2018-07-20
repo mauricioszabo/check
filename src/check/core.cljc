@@ -10,8 +10,8 @@
 
 (defmulti assert-arrow (fn [left qleft arrow right qright] arrow))
 
-(defmethod assert-arrow '=> [fn-left qleft _ right qright]
-  (let [result (compare-expr right (fn-left) qright qleft)
+(defmethod assert-arrow '=> [left qleft _ right qright]
+  (let [result (compare-expr right @left qright qleft)
         unformatted-msg (expectations/->failure-message result)
         msg (str/replace unformatted-msg #"^.*?\n" (str qleft " => " qright))]
     {:type (:type result)
@@ -19,9 +19,9 @@
      :expected qright
      :actual qleft}))
 
-(defn check* [fn-left quoted-left arrow right quoted-right]
+(defn check* [left quoted-left arrow right quoted-right]
   (try
-    (do-report (assert-arrow fn-left quoted-left arrow right quoted-right))
+    (do-report (assert-arrow left quoted-left arrow right quoted-right))
     (catch #?(:cljs js/Error :clj Throwable) t
       (do-report {:type :error
                   :message (str "Expected " quoted-left " " arrow " " quoted-right)
@@ -29,17 +29,16 @@
                   :actual t}))))
 
 (defmacro check [left arrow right]
-  `(check* (fn [] ~left) (quote ~left) (quote ~arrow) ~right (quote ~right)))
+  `(check* (delay ~left) (quote ~left) (quote ~arrow) ~right (quote ~right)))
 
-(defmethod assert-arrow '=includes=> [fn-left qleft _ right qright]
-  (check* #(in (fn-left)) qleft '=> right qright))
+(defmethod assert-arrow '=includes=> [left qleft _ right qright]
+  (check* (delay (in @left)) qleft '=> right qright))
 
-(defmethod assert-arrow '=throws=> [fn-left qleft _ right qright]
+(defmethod assert-arrow '=throws=> [left qleft _ right qright]
   (try
-    (let [res (fn-left)]
-      {:type :error
-       :message (str "Expected " qleft " to throw error " qright)
-       :expected right
-       :actual res})
+    {:type :error
+     :message (str "Expected " qleft " to throw error " qright)
+     :expected right
+     :actual @left}
     (catch #?(:cljs js/Error :clj Throwable) t
-      (check* (constantly t) qleft '=> right qright))))
+      (check* (delay t) qleft '=> right qright))))
