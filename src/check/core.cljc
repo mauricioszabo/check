@@ -3,11 +3,6 @@
             [expectations :refer [compare-expr ->failure-message in]]
             [clojure.test :refer [do-report]]))
 
-#?(:cljs
-   (require-macros '[check.utils :refer [if-cljs]])
-   :clj
-   (require '[check.utils :refer [if-cljs]]))
-
 (defmulti assert-arrow (fn [left qleft arrow right qright] arrow))
 
 (defmethod assert-arrow '=> [left qleft _ right qright]
