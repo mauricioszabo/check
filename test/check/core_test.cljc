@@ -3,18 +3,11 @@
             [clojure.test :as t :include-macros true]
             [check.core :refer [check] :include-macros true]))
 
-; #?(:cljs
-;    (require '[clojure.test :refer-macros [deftest testing run-tests]]
-;             '[check.core :refer-macros [check]])
-;    :clj
-;    (require '[clojure.test :refer :all]
-;             '[check.core :refer [check]]))
-;
 #?(:clj
    (defn capture-test-out [f]
-     (binding [*test-out* (java.io.StringWriter.)]
+     (binding [t/*test-out* (java.io.StringWriter.)]
        (f)
-       (str *test-out*)))
+       (str t/*test-out*)))
    :cljs
    (defn capture-test-out [f]
      (let [out (atom "")]
