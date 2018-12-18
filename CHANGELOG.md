@@ -8,6 +8,7 @@
 ## 0.0.3
 - Lots of things broke when we used `check*`, so it's removed again
 - `def-async-test` works again with `check`
+- Added `=resolves=>` arrow
 - Ported to Shadow-CLJS
 
 ## 0.0.2-SNAPSHOT
