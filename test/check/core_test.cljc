@@ -1,7 +1,9 @@
 (ns check.core-test
   (:require [clojure.string :as str]
             [clojure.test :as t :include-macros true]
-            [check.core :refer [check] :include-macros true]))
+            [check.core :refer [check] :include-macros true :as c]
+            [clojure.pprint :as pp]
+            [net.cgrand.macrovich :as macros]))
 
 #?(:clj
    (defn capture-test-out [f]
