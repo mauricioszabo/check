@@ -1,5 +1,6 @@
 (ns check.async
   (:require [clojure.string :as str]
+            [check.core :as core]
             [clojure.test :as test :include-macros true]
             [clojure.core.async :as async :include-macros true]
             [net.cgrand.macrovich :as macros]))
@@ -44,4 +45,15 @@
   (macros/case
     :cljs `(async/alts! ~chans)
     :clj `(async/alts!! ~chans)))
-;
+
+(defn- to-chan [left]
+  `(let [chan# (async/promise-chan)]
+       (.then ~left (fn [result#] (async/put! chan# result#)))
+       chan#))
+
+(defmethod core/assert-arrow '=resolves=> [cljs? left _ right]
+  (if cljs?
+    `(let [chan# (if (instance? js/Promise ~left)
+                   ~(to-chan left)
+                   ~left)]
+       (core/assert-arrow true (await! chan#) ~''=> ~right))))
