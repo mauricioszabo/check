@@ -7,4 +7,7 @@
 
  :builds {:tests {:target :node-test
                   :output-to "target/all_tests.js"
-                  :autorun true}}}
+                  :autorun true}
+          :dev {:target :node-library
+                :output-to "target/dev.js"
+                :main check.all-tests/main}}}
