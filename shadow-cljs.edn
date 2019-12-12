@@ -2,12 +2,10 @@
 {:source-paths ["src" "test"]
 
  :lein true
- :dependencies [[org.clojure/core.async "0.4.474"]
-                [check "0.0.2-SNAPSHOT"]]
 
  :builds {:tests {:target :node-test
                   :output-to "target/all_tests.js"
                   :autorun true}
-          :dev {:target :node-library
+          :dev {:target :node-script
                 :output-to "target/dev.js"
                 :main check.all-tests/main}}}
