@@ -81,3 +81,12 @@
   (if (symbol? right)
     (prepare-symbol left right)
     (prepare-coll left right)))
+
+(defmacro defmatcher [name args & body]
+  (prn `assert-arrow)
+  `(defmethod assert-arrow '~name [cljs?# left# _# right#]
+     (let [custom# (fn ~args ~@body)
+           res# (custom# right# left#)]
+       {:type (if (:pass? res#) :pass :error)
+        :expected left#
+        :actual (symbol (:failure-message res#))})))
