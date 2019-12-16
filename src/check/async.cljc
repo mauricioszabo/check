@@ -36,7 +36,7 @@ of every async test, both on success or on failure
               @mark-as-done#))))
       :clj
       `(test/testing ~description
-         (bindings [timeout ~(:timeout opts 3000)]
+         (binding [timeout ~(:timeout opts 3000)]
            (try
              ~@cmds
              (finally

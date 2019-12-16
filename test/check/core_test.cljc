@@ -21,7 +21,9 @@
     (check (throw (ex-info "Wow, some error!" {}))
            =throws=> [#?(:clj clojure.lang.ExceptionInfo
                          :cljs cljs.core.ExceptionInfo)
-                      #(check (.-message %) => "Wow, some error!")])))
+                      #(check #?(:clj (.getMessage %)
+                                 :cljs (.-message %))
+                              => "Wow, some error!")])))
 
 (deftest checks-for-in-behavior
   (check [1 2 3] =includes=> 2))
