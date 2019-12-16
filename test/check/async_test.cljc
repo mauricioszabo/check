@@ -1,5 +1,5 @@
 (ns check.async-test
-   (:require [clojure.test :refer [deftest run-tests is]]
+   (:require [clojure.test :refer [deftest is]]
              [clojure.core.async :as async :refer [>! timeout go <!]]
              [check.async :refer [async-test await!] :include-macros true]
              [check.core :refer [check] :include-macros true]
@@ -10,9 +10,6 @@
 (deftest things-running
   (async-test "when things run correctly"
     (is (= 1 1))))
-
-#_
-(run-tests)
 
 (deftest some-async-test
   (async-test "when there's a async test"
