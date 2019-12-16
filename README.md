@@ -33,7 +33,7 @@ You can use the "arrow" expectations the same way you would use `matcher-combina
 
 ### Async tests
 
-You can use `def-async-test` to generate a test that will timeout after a while
+You can use `async-test` to generate a test that will timeout after a while
 ```clojure
 (require '[check.async :refer [async-test await!]]
          '[clojure.core.async :refer [chan >! timeout go <!]])
@@ -44,7 +44,10 @@ You can use `def-async-test` to generate a test that will timeout after a while
       (future
         (Thread/sleep 400)
         (>! c :done))
-      (check (await! c) => :done))))
+
+      ; Both do the same thing:
+      (check (await! c) => :done)
+      (check c =resolves=> :done))))
 ```
 
 ## Extending

@@ -43,11 +43,6 @@ of every async test, both on success or on failure
                ~(if-let [teardown (:teardown opts)]
                   teardown))))))))
 
-(defmacro await! [chan]
-  (macros/case
-   :cljs `(async/<! ~chan)
-   :clj `(first (async/alts!! [~chan (async/timeout timeout)]))))
-
 (defmacro await-all! [chans]
   (macros/case
     :cljs `(async/alts! ~chans)
@@ -58,9 +53,17 @@ of every async test, both on success or on failure
        (.then ~left (fn [result#] (async/put! chan# result#)))
        chan#))
 
-(defmethod core/assert-arrow '=resolves=> [cljs? left _ right]
+(defn- as-channel [cljs? chan]
   (if cljs?
-    `(let [chan# (if (instance? js/Promise ~left)
-                   ~(to-chan left)
-                   ~left)]
-       (core/assert-arrow true (await! chan#) ~''=> ~right))))
+   `(async/<! (if (instance? js/Promise ~chan)
+                ~(to-chan chan)
+                ~chan))
+   `(first (async/alts!! [~chan (async/timeout timeout)]))))
+
+(defmacro await! [chan]
+  (macros/case
+   :cljs (as-channel true chan)
+   :clj (as-channel false chan)))
+
+(defmethod core/assert-arrow '=resolves=> [cljs? left _ right]
+  (core/assert-arrow cljs? (as-channel cljs? left) '=> right))
