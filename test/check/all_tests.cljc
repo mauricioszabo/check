@@ -6,5 +6,5 @@
 (defn main []
   (run-all-tests))
 
-(defn ^:dev/after after-reload []
-  (prn :RELOADED))
+(defn ^:dev/after-load after []
+  (main))
