@@ -1,47 +1,36 @@
 (ns check.core-test
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [clojure.test :refer [deftest testing] :as t]
+            [matcher-combinators.test]
+            [check.core :refer [check] :as check :include-macros true]))
 
-#?(:cljs
-   (require '[clojure.test :refer-macros [deftest testing run-tests]]
-            '[check.core :refer-macros [check]])
-   :clj
-   (require '[clojure.test :refer :all]
-            '[check.core :refer [check]]))
+(deftest check-wraps-matcher-combinators
+  (testing "simple checks"
+    (check {:foo 12} => {:foo 12}))
 
-#?(:clj
-   (defn capture-test-out [f]
-     (binding [*test-out* (java.io.StringWriter.)]
-       (f)
-       (str *test-out*)))
-   :cljs
-   (defn capture-test-out [f]
-     (let [out (atom "")]
-       (binding [*print-fn* (fn [ & args]
-                              (swap! out #(apply str % (str/join " " args) "\n")))]
-         (f)
-         @out))))
+  (testing "regexp checks"
+    (check (str 10) => #"\d\d")))
 
-(deftest check-wraps-expect-library
-  (check (capture-test-out #(check (inc 10) => 21))
-         => #"(?m)expected: 21.*\n.*was: 11"))
+(deftest check-captures-exceptions
+  (testing "checks only for exception type"
+    (check (throw (ex-info "Wow, some error!" {}))
+           =throws=> #?(:clj clojure.core.ExceptionInfo
+                        :cljs cljs.core.ExceptionInfo)))
 
-#?(:clj
-   (deftest check-captures-exceptions
-     (check (capture-test-out #(check (/ 10 0) => 0))
-            => #"Divide by zero"))
-
-   :cljs
-   (deftest check-captures-exceptions
-     (check (capture-test-out #(check (js/Error. "Divide by zero") => 0))
-            => #"Divide by zero")))
+  (testing "checks for exception type, and checks more"
+    (check (throw (ex-info "Wow, some error!" {}))
+           =throws=> [#?(:clj clojure.core.ExceptionInfo
+                         :cljs cljs.core.ExceptionInfo)
+                      #(check (.-message %) => "Wow, some error!")])))
 
 (deftest checks-for-in-behavior
-  (check (capture-test-out #(check [1 2 3] =includes=> 4))
-         => #"expected: 4.*\n.*was: 1"))
+  (check [1 2 3] =includes=> 2))
 
-(deftest checks-for-exception
-  (check (throw (ex-info "Exception" {:foo "BAR"}))
-         =throws=> #?(:cljs cljs.core.ExceptionInfo
-                            :clj clojure.lang.ExceptionInfo)))
+; CUSTOM MATCHERS
+(check/defmatcher is-the-same? [expected actual]
+  {:pass? (identical? expected actual)
+   :failure-message "They are not the same object!"})
 
-(run-tests)
+(deftest custom-matcher
+  (let [obj #?(:cljs (js/Object.) :clj (Object.))]
+    (check obj is-the-same? obj)))

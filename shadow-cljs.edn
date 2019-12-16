@@ -1,0 +1,12 @@
+;; shadow-cljs configuration
+{:source-paths ["src" "test"]
+
+ :lein true
+
+ :builds {:tests {:target :node-test
+                  :output-to "target/all_tests.js"
+                  :autorun true}
+          :dev {:target :node-script
+                :output-to "target/dev.js"
+                :main check.all-tests/main
+                :devtools {:after-load check.all-tests/after}}}}

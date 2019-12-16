@@ -1,16 +1,10 @@
-(ns check.async-test)
-
-#?(:cljs (require-macros '[cljs.core.async.macros :refer [go]]))
-
-#?(:cljs
-   (require '[clojure.test :refer-macros [run-tests is]]
-            '[check.async-cljs :refer-macros [await! def-async-test]]
-            '[cljs.core.async :refer [chan >! timeout <!]])
-
-   :clj
-   (require '[clojure.test :refer [run-tests is]]
-            '[clojure.core.async :refer [chan >! timeout go <!]]
-            '[check.async :refer [def-async-test await!]]))
+(ns check.async-test
+   (:require [clojure.test :refer [run-tests is] :include-macros true]
+             [clojure.core.async :as async :refer [chan >! timeout go <!] :include-macros true]
+             [check.async :refer [def-async-test await!] :include-macros true]
+             [check.core :refer [check] :include-macros true]
+             [net.cgrand.macrovich :as macros]
+             [clojure.pprint :as pp]))
 
 (def-async-test "when things run correctly" {}
   (is (= 1 1)))
@@ -22,4 +16,22 @@
      (>! c "ok"))
     (is (= "ok" (await! c)))))
 
-(run-tests)
+(def-async-test "when running with check" {}
+  (let [c (chan)]
+    (go
+     (<! (timeout 200))
+     (>! c "ok"))
+    (check (await! c) => "ok")))
+
+(macros/case
+ :cljs
+ (def-async-test "adds a checker for promises" {}
+   (check (. js/Promise resolve 10)
+          =resolves=> 10)))
+
+(def-async-test "adds a checker for core.async channels" {}
+  (let [c (chan)]
+    (go
+     (<! (timeout 200))
+     (>! c "ok"))
+    (check c =resolves=> "ok")))
