@@ -43,7 +43,9 @@
       (go
        (<! (timeout 100))
        (>! c "ok"))
-      (check c =resolves=> "ok"))))
+      (check c =resolves=> "ok")))
+  #?(:clj (check @teardown => :done)))
 
-(deftest after-teardown
-  (check @teardown => :done))
+#?(:cljs
+   (deftest after-teardown
+     (check @teardown => :done)))
