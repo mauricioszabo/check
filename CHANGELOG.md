@@ -1,9 +1,10 @@
 # Change Log
 
-## FUTURE
-- Fix error when an exception does not checks with `=throws=>`
+## MISSING
 - Documentation
-- Make CI understand failures (currently we're mocking Clojure's test reporter, but still marks a lot of things as failures)
+
+## 0.1.0
+- Wrap matcher-combinators checkers
 
 ## 0.0.3
 - Lots of things broke when we used `check*`, so it's removed again

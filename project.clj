@@ -1,4 +1,4 @@
-(defproject check "0.0.3-SNAPSHOT"
+(defproject check "0.1.0-SNAPSHOT"
   :description "Test helpers"
   :url "https://github.com/mauricioszabo/check"
   :license {:name "Eclipse Public License"
