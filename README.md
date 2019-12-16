@@ -35,22 +35,66 @@ You can use the "arrow" expectations the same way you would use `matcher-combina
 
 You can use `def-async-test` to generate a test that will timeout after a while
 ```clojure
-(require '[check.async :refer [def-async-test await!]]
+(require '[check.async :refer [async-test await!]]
          '[clojure.core.async :refer [chan >! timeout go <!]])
 
-(def-async-test "checks for async code" {}
-  (let [c (chan)]
-    (future
-      (Thread/sleep 400)
-      (>! c :done))
-    (check (await! c) => :done)))
+(deftest some-test
+  (async-test "checks for async code"
+    (let [c (chan)]
+      (future
+        (Thread/sleep 400)
+        (>! c :done))
+      (check (await! c) => :done))))
 ```
 
 ## Extending
+Suppose you have a very complicated map that represents some internal structure of your code. You probably don't want to keep repeating your map data all over the place, and the matchers that are included are not sufficient. `check` allows you to create custom matchers, so you have a custom way of matching your data to your expectation, and also a custom error to guide you to find the problem in your code.
+
+For example, suppose you have a map in the format:
+```clojure
+{:accounts [{:name "Savings" :amount 200M}
+            {:name "Primary" :amount 20M}]}
+```
+
+And you want to check the amount a person have in each account, but you don't want to "tie" your implementation to your "map shape". You can write a checker like this:
+
+```clojure
+;; First we define a way to compare what we expect with our current data:
+(defn- mismatches [accounts [name amount]]
+  (if-let [acc (->> accounts
+                    (filter #(-> % :name (= name)))
+                    first)]
+    (if (= amount (:amount acc))
+      nil
+      (str "Account " name " should have " amount ", but have " (:amount acc)))
+    (str "Account " name " isn't present on list of accounts")))
+
+;; Then we define our matcher, that will call this function to check for problems:
+(check/defmatcher =have-amount=> [expected actual]
+  (let [accs (:accounts actual)
+        misses (map #(mismatches accs %) expected)
+        ;; We remove rows where there's no problem at all
+        misses (remove nil? misses)]
+    {:pass? (empty? misses) ;; If pass? is true, failure-message is not needed
+     :failure-message (str "\n" (clojure.string/join "\n" misses))}))
+
+;; Then, on some test:
+(deftest check-accounts
+  (check {:accounts [{:name "Savings" :amount 200M}
+                     {:name "Primary" :amount 20M}]}
+         =have-amount=> {"Savings" 100M
+                         "Investments" 1000M}))
+
+;; This will fail with:
+;FAIL in (check-accounts) (at test.clj:4:4)
+;expected: {"Savings" 100, "Investments" 1000}
+;  actual:
+;Account Savings should have 100, but have 200
+;Account Investments isn't present on list of accounts
+```
 
 ## License
 
 Copyright © 2018 Maurício Szabo
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Distributed under the Eclipse Public License either version 1.0 or any later version.
