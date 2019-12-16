@@ -5,6 +5,7 @@
 
 ## 0.1.0
 - Wrap matcher-combinators checkers
+- Support for custom matchers
 
 ## 0.0.3
 - Lots of things broke when we used `check*`, so it's removed again

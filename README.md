@@ -3,18 +3,13 @@
 Library helpers for a better testing world.
 
 ## Motivation
-Clojure's default test library is... well... limited, to say the least. There are better
-options out there, but `expectations` is too opinated in "one assertion per test", `midje`
-is **way too magic** (and also don't work on ClojureScript), `speclj` is probably dead
-(and don't work with async tests).
+Clojure's default test library is... well... limited, to say the least. There are better options out there, but `expectations` is too opinated in "one assertion per test", `midje` is **way too magic** (and also don't work on ClojureScript), `speclj` is probably dead (and don't work with async tests).
 
-So, enters this library: it wraps `expectations` so we're not trying to reinvent the
-wheel, uses `core.async` to transform simulate synchronous code on ClojureScript async
-tests, and uses "midje-style" arrows. Everybody wins!
+So, enters this library: it wraps `expectations` and `matcher-combinators` so we're not trying to reinvent the wheel, uses `core.async` to transform simulate synchronous code on ClojureScript async tests, and uses "midje-style" arrows. Everybody wins!
 
 ## Usage
 
-You can use the "arrow" expectations the same way you would use `expectations` lib:
+You can use the "arrow" expectations the same way you would use `matcher-combinators` lib:
 
 ```clojure
 (require '[check.core :refer [check]]
