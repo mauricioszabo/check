@@ -15,7 +15,7 @@
          msg# (->> result# :matcher-combinators.result/value p/as-string
                    (str (pr-str ~left) "\n\nMismatch:\n"))
          pass?# (= :match (:matcher-combinators.result/type result#))]
-     {:type (if pass?# :pass :error)
+     {:type (if pass?# :pass :fail)
       :expected qright#
       :actual (symbol msg#)}))
 
@@ -39,7 +39,7 @@
    `(try
       (do-report ~(assert-arrow false left arrow right))
       (catch java.lang.Throwable t#
-        (do-report {:type :error
+        (do-report {:type :fail
                     :message (str "Expected " (quote ~left) (quote ~arrow) (quote ~right))
                     :expected ~right
                     :actual t#})))
@@ -47,7 +47,7 @@
    `(try
       (do-report ~(assert-arrow true left arrow right))
       (catch js/Object t#
-        (do-report {:type :error
+        (do-report {:type :fail
                     :message (str "Expected " (quote ~left) (quote ~arrow) (quote ~right))
                     :expected ~right
                     :actual t#})))))
@@ -55,7 +55,7 @@
 (defn- prepare-symbol [left ex]
   `(let [qleft# (quote ~left)]
      (try
-       {:type :error
+       {:type :fail
         :message (str "Expected " qleft# " to throw error " (quote ~ex))
         :expected (quote ~ex)
         :actual ~left}
@@ -67,7 +67,7 @@
     `(let [qleft# (quote ~left)
            qright# (quote ~right)]
        (try
-         {:type :error
+         {:type :fail
           :message (str "Expected " qleft# " to throw error " (quote ~ex))
           :expected qright#
           :actual ~left}
@@ -82,11 +82,19 @@
     (prepare-symbol left right)
     (prepare-coll left right)))
 
+(def ^:private custom-matchers (atom {}))
+(defmethod assert-arrow :default [cljs? left matcher right]
+  `(if-let [matcher# (get @custom-matchers '~matcher)]
+     (let [res# (matcher# ~right ~left)]
+       (if (:pass? res#)
+         {:type :pass
+          :message '(~'check '~left => '~right)}
+         {:type :fail
+          :expected ~right
+          :actual (symbol (:failure-message res#))}))
+     {:type :error
+      :expected ~right
+      :actual (str "Matcher " '~matcher " is not implemented")}))
+
 (defmacro defmatcher [name args & body]
-  (prn `assert-arrow)
-  `(defmethod assert-arrow '~name [cljs?# left# _# right#]
-     (let [custom# (fn ~args ~@body)
-           res# (custom# right# left#)]
-       {:type (if (:pass? res#) :pass :error)
-        :expected left#
-        :actual (symbol (:failure-message res#))})))
+  `(swap! custom-matchers assoc '~name (fn ~args ~@body)))
