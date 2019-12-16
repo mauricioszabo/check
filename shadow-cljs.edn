@@ -8,4 +8,5 @@
                   :autorun true}
           :dev {:target :node-script
                 :output-to "target/dev.js"
-                :main check.all-tests/main}}}
+                :main check.all-tests/main
+                :devtools {:after-load check.all-tests/after}}}}
