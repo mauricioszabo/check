@@ -1,40 +1,25 @@
 (ns check.core-test
   (:require [clojure.string :as str]
-            [clojure.test :as t :include-macros true]
+            [clojure.test :refer [deftest testing] :as t]
+            [matcher-combinators.test]
             [check.core :refer [check] :include-macros true :as c]))
 
-#?(:clj
-   (defn capture-test-out [f]
-     (binding [t/*test-out* (java.io.StringWriter.)]
-       (f)
-       (str t/*test-out*)))
-   :cljs
-   (defn capture-test-out [f]
-     (let [out (atom "")]
-       (binding [*print-fn* (fn [ & args]
-                              (swap! out #(apply str % (str/join " " args) "\n")))]
-         (f)
-         @out))))
+(deftest check-wraps-matcher-combinators
+  (testing "simple checks"
+    (check {:foo 12} => {:foo 12}))
 
-(t/deftest check-wraps-expect-library
-  (check (capture-test-out #(check (inc 10) => 21))
-         => #"(?m)expected: 21.*\n.*was: 11"))
+  (testing "regexp checks"
+    (check (str 10) => #"\d\d")))
 
-#?(:clj
-   (t/deftest check-captures-exceptions
-     (check (capture-test-out #(check (/ 10 0) => 0))
-            => #"Divide by zero"))
+(deftest check-captures-exceptions
+  (testing "checks only for exception type"
+    (check (throw (ex-info "Wow, some error!" {}))
+           =throws=> cljs.core.ExceptionInfo))
 
-   :cljs
-   (t/deftest check-captures-exceptions
-     (check (capture-test-out #(check (js/Error. "Divide by zero") => 0))
-            => #"Divide by zero")))
+  (testing "checks for exception type, and checks more"
+    (check (throw (ex-info "Wow, some error!" {}))
+           =throws=> [cljs.core.ExceptionInfo
+                      #(check (.-message %) => "Wow, some error!")])))
 
-(t/deftest checks-for-in-behavior
-  (check (capture-test-out #(check [1 2 3] =includes=> 4))
-         => #"expected: 4.*\n.*was: 1"))
-
-(t/deftest checks-for-exception
-  (check (throw (ex-info "Exception" {:foo "BAR"}))
-         =throws=> #?(:cljs cljs.core.ExceptionInfo
-                      :clj clojure.lang.ExceptionInfo)))
+(deftest checks-for-in-behavior
+  (check [1 2 3] =includes=> 2))
