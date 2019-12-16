@@ -32,6 +32,7 @@
  :cljs
  (deftest promises
    (async-test "adds a checker for promises"
+     (check (await! (. js/Promise resolve 10)) => 10)
      (check (. js/Promise resolve 10) =resolves=> 10))))
 
 (def teardown (atom :initialized))
