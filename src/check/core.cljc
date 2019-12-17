@@ -4,7 +4,8 @@
             [clojure.test :refer [do-report]]
             [net.cgrand.macrovich :as macros]
             [matcher-combinators.core :as c]
-            [matcher-combinators.printer :as p]))
+            [matcher-combinators.printer :as p]
+            [matcher-combinators.test]))
 
 (defmulti assert-arrow (fn [cljs? left arrow right] arrow))
 

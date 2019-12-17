@@ -1,7 +1,6 @@
 (ns check.core-test
   (:require [clojure.string :as str]
             [clojure.test :refer [deftest testing] :as t]
-            [matcher-combinators.test]
             [check.core :refer [check] :as check :include-macros true]))
 
 (deftest check-wraps-matcher-combinators
@@ -10,6 +9,10 @@
 
   (testing "regexp checks"
     (check (str 10) => #"\d\d")))
+
+(deftest matcher-combinators
+  (testing "implements code to check strings"
+    (check "foobar is a string" => "foobar is a string")))
 
 (deftest check-captures-exceptions
   (testing "checks only for exception type"
