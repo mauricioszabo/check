@@ -12,7 +12,7 @@
 
 (deftest matcher-combinators
   (testing "implements code to check strings"
-    (check "foobar is a string" => "foobar is a stri")))
+    (check "foobar is a string" => "foobar is a string")))
 
 (deftest check-captures-exceptions
   (testing "checks only for exception type"
