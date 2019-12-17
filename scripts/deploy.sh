@@ -9,5 +9,4 @@ else
 fi
 
 lein change :deploy-repositories concat '[["releases" {:url "https://clojars.org/repo/" :username :env/clojars_login :password :env/clojars_password}]]'
-lein deploy clojars
-
+lein deploy releases
