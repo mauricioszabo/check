@@ -12,3 +12,4 @@ pom.xml.asc
 node_modules
 figwheel_server.log
 package*.json
+.shadow-cljs

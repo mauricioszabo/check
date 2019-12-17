@@ -5,41 +5,43 @@
             [clojure.core.async :as async :include-macros true]
             [net.cgrand.macrovich :as macros]))
 
-(defmacro def-async-test [description opts & cmds]
-  (assert (map? opts) "second parameter must be a map")
-  (let [norm-desc (symbol (-> description
-                              (str/replace #"\s" "-")
-                              (str/replace #"[^\-\w\d]" "")))]
+(def ^:dynamic timeout 3000)
+(defmacro async-test
+  "Defines an async test. On Clojure, wraps all execution over a go-block.
+On ClojureScript, wraps execution on a go-block and also sets the `async`
+option. If the first argument of `cmds` is a map, it'll accept the following
+keys:
+
+:teardown - a sequence of commands that will tear down after the execution
+of every async test, both on success or on failure
+:timeout - the time that the async test will wait before timing out"
+  [description & cmds]
+  (let [opts (first cmds)
+        cmds (cond-> cmds (map? opts) rest)]
     (macros/case
       :cljs
-      `(test/deftest ~norm-desc
-         (test/async done#
+      `(test/async done#
+         (test/testing ~description
            (async/go
             (let [mark-as-done# (delay
-                                 ~(if-let [teardown (:teardown opts)]
-                                    teardown)
-                                 (done#))]
-              (test/testing ~description
-                (js/setTimeout (fn []
-                                 (when-not (realized? mark-as-done#)
-                                   (test/is (throw (ex-info "Async test error - not finalized" {})))
-                                   @mark-as-done#))
-                               3000)
-                ~@cmds
-                @mark-as-done#)))))
+                                  ~(if-let [teardown (:teardown opts)]
+                                     teardown)
+                                  (done#))]
+              (js/setTimeout (fn []
+                               (when-not (realized? mark-as-done#)
+                                 (test/is (throw (ex-info "Async test error - not finalized" {})))
+                                 @mark-as-done#))
+                             ~(:timeout opts 3000))
+              ~@cmds
+              @mark-as-done#))))
       :clj
-      `(test/deftest ~norm-desc
-         (test/testing ~description
+      `(test/testing ~description
+         (binding [timeout ~(:timeout opts 3000)]
            (try
              ~@cmds
              (finally
                ~(if-let [teardown (:teardown opts)]
                   teardown))))))))
-
-(defmacro await! [chan]
-  (macros/case
-   :cljs `(async/<! ~chan)
-   :clj `(first (async/alts!! [~chan (async/timeout 3000)]))))
 
 (defmacro await-all! [chans]
   (macros/case
@@ -51,9 +53,17 @@
        (.then ~left (fn [result#] (async/put! chan# result#)))
        chan#))
 
-(defmethod core/assert-arrow '=resolves=> [cljs? left _ right]
+(defn- as-channel [cljs? chan]
   (if cljs?
-    `(let [chan# (if (instance? js/Promise ~left)
-                   ~(to-chan left)
-                   ~left)]
-       (core/assert-arrow true (await! chan#) ~''=> ~right))))
+   `(async/<! (if (instance? js/Promise ~chan)
+                ~(to-chan chan)
+                ~chan))
+   `(first (async/alts!! [~chan (async/timeout timeout)]))))
+
+(defmacro await! [chan]
+  (macros/case
+   :cljs (as-channel true chan)
+   :clj (as-channel false chan)))
+
+(defmethod core/assert-arrow '=resolves=> [cljs? left _ right]
+  (core/assert-arrow cljs? (as-channel cljs? left) '=> right))

@@ -82,7 +82,7 @@
     (prepare-symbol left right)
     (prepare-coll left right)))
 
-(def ^:private custom-matchers (atom {}))
+(def custom-matchers (atom {}))
 (defmethod assert-arrow :default [cljs? left matcher right]
   `(if-let [matcher# (get @custom-matchers '~matcher)]
      (let [res# (matcher# ~right ~left)]

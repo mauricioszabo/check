@@ -14,14 +14,16 @@
 (deftest check-captures-exceptions
   (testing "checks only for exception type"
     (check (throw (ex-info "Wow, some error!" {}))
-           =throws=> #?(:clj clojure.core.ExceptionInfo
+           =throws=> #?(:clj clojure.lang.ExceptionInfo
                         :cljs cljs.core.ExceptionInfo)))
 
   (testing "checks for exception type, and checks more"
     (check (throw (ex-info "Wow, some error!" {}))
-           =throws=> [#?(:clj clojure.core.ExceptionInfo
+           =throws=> [#?(:clj clojure.lang.ExceptionInfo
                          :cljs cljs.core.ExceptionInfo)
-                      #(check (.-message %) => "Wow, some error!")])))
+                      #(check #?(:clj (.getMessage %)
+                                 :cljs (.-message %))
+                              => "Wow, some error!")])))
 
 (deftest checks-for-in-behavior
   (check [1 2 3] =includes=> 2))
