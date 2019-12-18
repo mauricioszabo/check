@@ -53,7 +53,7 @@ of every async test, both on success or on failure
        (.then ~left (fn [result#] (async/put! chan# result#)))
        chan#))
 
-(defn- as-channel [cljs? chan]
+(defn get-from-channel! [cljs? chan]
   (if cljs?
    `(async/<! (if (instance? js/Promise ~chan)
                 ~(to-chan chan)
@@ -62,8 +62,9 @@ of every async test, both on success or on failure
 
 (defmacro await! [chan]
   (macros/case
-   :cljs (as-channel true chan)
-   :clj (as-channel false chan)))
+   :cljs (get-from-channel! true chan)
+   :clj (get-from-channel! false chan)))
 
 (defmethod core/assert-arrow '=resolves=> [cljs? left _ right]
-  (core/assert-arrow cljs? (as-channel cljs? left) '=> right))
+  `(let [value# (get-from-channel! ~cljs? ~left)]
+     (core/assert-arrow ~cljs? value# '=> ~right)))

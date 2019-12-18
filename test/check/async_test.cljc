@@ -19,6 +19,19 @@
        (>! c "ok"))
       (is (= "ok" (await! c))))))
 
+(defn- async-fun []
+  (let [c (async/chan)]
+    (go
+      (async/<! (async/timeout 100))
+      (async/>! c "what\nI want\nto check\nreally\n")
+      (async/>! c "something else")
+      (async/close! c))
+    c))
+
+(deftest multi-check-channel
+  (async-test "Resolves with regexp"
+   (check (async-fun) =resolves=> #"to check")))
+
 (deftest checking
   (async-test "when running with check"
     (let [c (async/promise-chan)]
