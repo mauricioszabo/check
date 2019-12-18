@@ -53,7 +53,7 @@ of every async test, both on success or on failure
        (.then ~left (fn [result#] (async/put! chan# result#)))
        chan#))
 
-(defn- get-from-channel! [cljs? chan]
+(defn get-from-channel! [cljs? chan]
   (if cljs?
    `(async/<! (if (instance? js/Promise ~chan)
                 ~(to-chan chan)
