@@ -9,6 +9,10 @@ So, enters this library: it wraps `expectations` and `matcher-combinators` so we
 
 ## Usage
 
+Add check to your project's dependencies:
+
+[![Clojars Project](https://img.shields.io/clojars/v/check.svg)](https://clojars.org/check)
+
 You can use the "arrow" expectations the same way you would use `matcher-combinators` lib:
 
 ```clojure
