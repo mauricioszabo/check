@@ -1,8 +1,9 @@
 (ns check.async-test
    (:require [clojure.test :refer [deftest is]]
              [clojure.core.async :as async :refer [>! timeout go <!]]
-             [check.async :refer [async-test await!] :include-macros true]
-             [check.core :refer [check] :include-macros true]
+             [check.async :refer [async-test await! promise-test]]
+             [check.core :refer [check]]
+             [promesa.core :as p]
              [net.cgrand.macrovich :as macros]
              [clojure.pprint :as pp]))
 
@@ -60,6 +61,15 @@
       (check c =resolves=> "ok")))
   #?(:clj (check @teardown => :done)))
 
-#?(:cljs
-   (deftest after-teardown
-     (check @teardown => :done)))
+(macros/case
+ :cljs
+ (deftest after-teardown
+   (check @teardown => :done)))
+
+(deftest promised-test
+  (macros/case
+   :cljs
+   (promise-test "checking for promises"
+     (check (. js/Promise resolve 10) => 10)
+     (p/delay 100)
+     (check (. js/Promise resolve 10) => 10))))
