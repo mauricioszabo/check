@@ -1,4 +1,5 @@
 (ns check.core
+  #?(:cljs (:require-macros [check.core]))
   (:require [clojure.string :as str]
             [expectations :refer [compare-expr ->failure-message in]]
             [clojure.test :refer [do-report]]

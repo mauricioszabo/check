@@ -1,4 +1,5 @@
 (ns check.async
+  #?(:cljs (:require-macros [check.async]))
   (:require [clojure.string :as str]
             [check.core :as core]
             [clojure.test :as test :include-macros true]
