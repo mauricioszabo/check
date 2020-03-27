@@ -1,7 +1,5 @@
 ;; shadow-cljs configuration
-{:source-paths ["src" "test"]
-
- :lein true
+{:lein true
 
  :builds {:tests {:target :node-test
                   :output-to "target/all_tests.js"
