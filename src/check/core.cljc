@@ -101,7 +101,7 @@
           :expected rgt#
           :actual (symbol (:failure-message res#))}))
      {:type :error
-      :expected rgt#
+      :expected ~right
       :actual (str "Matcher " '~matcher " is not implemented")}))
 
 (defmacro defmatcher [name args & body]
