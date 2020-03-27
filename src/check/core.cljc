@@ -11,20 +11,24 @@
 (defmulti assert-arrow (fn [cljs? left arrow right] arrow))
 
 (defmethod assert-arrow '=> [_ left _ right]
-  `(let [qleft# (quote ~left)
-         qright# (quote ~right)
-         result# (c/match ~right ~left)
+  `(let [lft# ~left
+         rgt# ~right
+         qleft# (quote lft#)
+         qright# (quote rgt#)
+         result# (c/match rgt# lft#)
          msg# (->> result# :matcher-combinators.result/value p/as-string
-                   (str (pr-str ~left) "\n\nMismatch:\n"))
+                   (str (pr-str lft#) "\n\nMismatch:\n"))
          pass?# (= :match (:matcher-combinators.result/type result#))]
      {:type (if pass?# :pass :fail)
       :expected qright#
       :actual (symbol msg#)}))
 
 (defmethod assert-arrow '=expect=> [_ left _ right]
-  `(let [qleft# (quote ~left)
-         qright# (quote ~right)
-         result# (compare-expr ~right ~left qright# qleft#)
+  `(let [lft# ~left
+         rgt# ~right
+         qleft# (quote lft#)
+         qright# (quote rgt#)
+         result# (compare-expr rgt# lft# qright# qleft#)
          unformatted-msg# (expectations/->failure-message result#)
          msg# (str/replace unformatted-msg# #"^.*?\n" (str qleft# " => " qright#))]
      {:type (:type result#)
@@ -87,15 +91,17 @@
 (def custom-matchers (atom {}))
 (defmethod assert-arrow :default [cljs? left matcher right]
   `(if-let [matcher# (get @custom-matchers '~matcher)]
-     (let [res# (matcher# ~right ~left)]
+     (let [lft# ~left
+           rgt# ~right
+           res# (matcher# rgt# lft#)]
        (if (:pass? res#)
          {:type :pass
-          :message '(~'check '~left => '~right)}
+          :message '(~'check 'lft# => 'rgt#)}
          {:type :fail
-          :expected ~right
+          :expected rgt#
           :actual (symbol (:failure-message res#))}))
      {:type :error
-      :expected ~right
+      :expected rgt#
       :actual (str "Matcher " '~matcher " is not implemented")}))
 
 (defmacro defmatcher [name args & body]
