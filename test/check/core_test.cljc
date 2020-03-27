@@ -1,6 +1,6 @@
 (ns check.core-test
   (:require [clojure.string :as str]
-            [clojure.test :refer [deftest testing] :as t]
+            [clojure.test :refer [deftest testing run-tests] :as t]
             [check.core :refer [check] :as check :include-macros true]))
 
 (deftest check-wraps-matcher-combinators
@@ -39,3 +39,15 @@
 (deftest custom-matcher
   (let [obj #?(:cljs (js/Object.) :clj (Object.))]
     (check obj is-the-same? obj)))
+
+(defn stateful-obj []
+  (let [a (atom [])]
+    (fn [x]
+      (swap! a conj (inc x))
+      @a)))
+
+(deftest stateful-matchers
+  (let [add! (stateful-obj)]
+    (check (add! 10) => [11])
+    (check (add! 11) => [11 12])
+    (check (add! 12) => [11 12 13])))
