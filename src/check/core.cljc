@@ -13,8 +13,8 @@
 (defmethod assert-arrow '=> [_ left _ right]
   `(let [lft# ~left
          rgt# ~right
-         qleft# (quote lft#)
-         qright# (quote rgt#)
+         qleft# (quote ~left)
+         qright# (quote ~right)
          result# (c/match rgt# lft#)
          msg# (->> result# :matcher-combinators.result/value p/as-string
                    (str (pr-str lft#) "\n\nMismatch:\n"))
@@ -26,8 +26,8 @@
 (defmethod assert-arrow '=expect=> [_ left _ right]
   `(let [lft# ~left
          rgt# ~right
-         qleft# (quote lft#)
-         qright# (quote rgt#)
+         qleft# (quote ~left)
+         qright# (quote ~right)
          result# (compare-expr rgt# lft# qright# qleft#)
          unformatted-msg# (expectations/->failure-message result#)
          msg# (str/replace unformatted-msg# #"^.*?\n" (str qleft# " => " qright#))]
