@@ -27,11 +27,15 @@
                 :arrow '#{--- ===}
                 :body (s/* any?)))
 
-(defn- normalize-return [{:keys [arrow return]}]
+(defn- normalize-return [{:keys [arrow fn args return]}]
   (case arrow
     => {:return return}
     =streams=> {:fn `(let [stream# (atom ~return)]
                       (fn []
+                        (when (empty? @stream#)
+                          (throw (ex-info "No more values to stream on mock"
+                                          {:function '~fn
+                                           :args ~args})))
                         (let [ret# (first @stream#)]
                           (swap! stream# rest)
                           ret#)))}))
@@ -39,7 +43,7 @@
 (defn- normalize-mocking-params [mockings]
   (->> mockings
        (map (fn [{:keys [template return arrow]}]
-              [`(var ~(:fn template)) {:args (:args template) :arrow arrow :return return}]))
+              [`(var ~(:fn template)) (assoc template :arrow arrow :return return)]))
        (group-by first)
        (map (fn [[k v]]
               [k (->> v

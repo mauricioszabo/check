@@ -34,4 +34,5 @@
      (some-function 10 20) =streams=> [1 2]
      ---
      (check (some-function 10 20) => 1)
-     (check (some-function 10 20) => 2))))
+     (check (some-function 10 20) => 2)
+     (check (some-function 10 20) =throws=> clojure.lang.ExceptionInfo))))
