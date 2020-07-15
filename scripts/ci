@@ -1,0 +1,5 @@
+#!/bin/bash
+
+lein test &&
+lein run -m shadow.cljs.devtools.cli --npm compile tests &&
+node target/all_tests.js

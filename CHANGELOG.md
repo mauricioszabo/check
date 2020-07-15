@@ -3,6 +3,9 @@
 ## MISSING
 - Documentation
 
+## 0.1.1
+- First cut of mocks library
+
 ## 0.1.0
 - Wrap matcher-combinators checkers
 - Support for custom matchers

@@ -1,4 +1,4 @@
-(defproject check "0.1.0"
+(defproject check "0.1.1"
   :description "Test helpers"
   :url "https://github.com/mauricioszabo/check"
   :license {:name "Eclipse Public License"
@@ -11,4 +11,5 @@
 
   :profiles {:dev {:src-paths ["dev"]
                    :dependencies [[org.clojure/clojure "1.10.0"]
-                                  [thheller/shadow-cljs "2.10.10"]]}})
+                                  [thheller/shadow-cljs "2.10.10"]]}}
+  :repl-options {:init-ns user})
