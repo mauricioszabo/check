@@ -4,9 +4,7 @@
              [check.async :refer [async-test await! promise-test]]
              [check.core :refer [check]]
              [promesa.core :as p]
-             [net.cgrand.macrovich :as macros]
-             [clojure.pprint :as pp]))
-
+             [net.cgrand.macrovich :as macros]))
 
 (deftest things-running
   (async-test "when things run correctly"

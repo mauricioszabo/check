@@ -11,4 +11,5 @@
 
   :profiles {:dev {:src-paths ["dev"]
                    :dependencies [[org.clojure/clojure "1.10.0"]
-                                  [thheller/shadow-cljs "2.10.10"]]}})
+                                  [thheller/shadow-cljs "2.10.10"]]}}
+  :repl-options {:init-ns user})

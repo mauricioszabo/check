@@ -10,7 +10,7 @@
                return return))
            (throw (ex-info "No mocked calls for this fn/args"
                            {:function fun
-                            :expected-args args
+                            :expected-args (keys args+return)
                             :actual-args old-args}))))])
 
 (defn mocking* [fun+args+returns body]
