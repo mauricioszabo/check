@@ -96,6 +96,26 @@ And you want to check the amount a person have in each account, but you don't wa
 ;Account Investments isn't present on list of accounts
 ```
 
+## Mocks and Stubs
+Currently, there's a `mocking` macro that allows you to mock some requests. Currently, only stubs are supported - something that will stub your global vars and return a value. Support for mocks, spies, etc is planned.
+
+```clojure
+(require '[check.core :refer [check]]
+         '[check.mocks :refer [mocking]])
+
+;; You define your mocks with `mocking` macro:
+
+(deftest some-test
+  (mocking
+    (http/get "http://localhost:8000") => {:body "Hello, world!"}
+    ; Simulating different requests every code
+    (http/post "http://localhost:8000" {:foo "BAR"}) =streams=> [:ok :fail]
+    ---
+    (check (http/get "http://localhost:8000") => {:body string?})
+    (check (http/post "http://localhost:8000") => :ok)
+    (check (http/post "http://localhost:8000") => :fail)
+```
+
 ## License
 
 Copyright © 2018 Maurício Szabo
