@@ -1,5 +1,4 @@
 (ns check.mocks
-  #?(:cljs (:require-macros [check.mocks]))
   (:require [clojure.spec.alpha :as s]))
 
 (s/def ::arrow '#{=> =streams=>})
