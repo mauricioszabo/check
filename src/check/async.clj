@@ -1,8 +1,8 @@
 (ns check.async
   (:require [clojure.string :as str]
             [check.core :as core]
-            [clojure.test :as test :include-macros true]
-            [clojure.core.async :as async :include-macros true]
+            [clojure.test :as test]
+            [clojure.core.async :as async]
             [promesa.core :as p]
             [clojure.walk :as walk]
             [net.cgrand.macrovich :as macros]))
@@ -82,6 +82,9 @@ of every async test, both on success or on failure
                                  (str/ends-with? (-> % first str) "/check")))
               resolve)
      body)))
+
+(defmacro testing [description & body]
+  `(test/testing ~description (p/do! ~@body)))
 
 (defmacro promise-test [description & cmds]
   (macros/case

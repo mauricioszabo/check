@@ -5,7 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/core.async "1.2.603"]
                  [net.cgrand/macrovich "0.2.1"]
-                 [funcool/promesa "4.0.2"]
+                 [funcool/promesa "5.1.0"]
                  [nubank/matcher-combinators "2.1.0"]
                  [expectations "2.2.0-rc3"]]
 

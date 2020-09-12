@@ -1,25 +1,6 @@
 (ns check.mocks
   (:require [clojure.spec.alpha :as s]))
 
-(defn- normalize [[fun args+return]]
-  [fun (fn [ & old-args]
-         (if-let [return (get args+return old-args)]
-           (let [{:keys [fn return]} return]
-             (cond
-               fn (fn)
-               return return))
-           (throw (ex-info "No mocked calls for this fn/args"
-                           {:function fun
-                            :expected-args (keys args+return)
-                            :actual-args old-args}))))])
-
-(defn mocking* [fun+args+returns body]
-  (let [mocks (->> fun+args+returns
-                   (map normalize)
-                   (into {}))]
-    (with-redefs-fn mocks
-      body)))
-
 (s/def ::arrow '#{=> =streams=>})
 (s/def ::template (s/cat :fn symbol? :args (s/* any?)))
 (s/def ::mocks (s/cat
@@ -30,31 +11,55 @@
 (defn- normalize-return [{:keys [arrow fn args return]}]
   (case arrow
     => {:return return}
-    =streams=> {:fn `(let [stream# (atom ~return)]
-                      (fn []
-                        (when (empty? @stream#)
-                          (throw (ex-info "No more values to stream on mock"
-                                          {:function '~fn
-                                           :args ~args})))
-                        (let [ret# (first @stream#)]
-                          (swap! stream# rest)
-                          ret#)))}))
+    =streams=> (let [s (gensym "stream-")]
+                 {:let-fn `[~s (atom ~return)]
+                  :fn `(fn []
+                         (when (empty? @~s)
+                           (throw (ex-info "No more values to stream on mock"
+                                           {:function '~fn
+                                            :args ~args})))
+                         (let [ret# (first @~s)]
+                           (swap! ~s rest)
+                           ret#))})))
 
 (defn- normalize-mocking-params [mockings]
   (->> mockings
        (map (fn [{:keys [template return arrow]}]
-              [`(var ~(:fn template)) (assoc template :arrow arrow :return return)]))
+              [(:fn template) (assoc template :arrow arrow :return return)]))
        (group-by first)
        (map (fn [[k v]]
               [k (->> v
                       (map (fn [[_ v]] [(:args v) (normalize-return v)]))
-                      (into {}))]))
-       (into {})))
+                      (into {}))]))))
+       ; (into {})))
+
+(defn- to-function [[fun args+return]]
+  (let [all-lets (->> args+return
+                      (map (comp :let-fn second))
+                      (filter identity)
+                      (mapcat identity))]
+
+    [fun
+     `(let [~@all-lets]
+        (fn ~fun [ & old-args#]
+          (if-let [return# (get ~args+return old-args#)]
+            (let [{:keys [~'fn ~'return]} return#]
+              (cond
+                ~'fn (~'fn)
+                ~'return ~'return))
+            (throw (ex-info "No mocked calls for this fn/args"
+                            {:function '~fun
+                             :expected-args (keys ~args+return)
+                             :actual-args old-args#})))))]))
 
 (defmacro mocking
   "Mocks a group of calls. "
   [ & args]
   (s/assert* ::mocks args)
   (let [{:keys [mocks body]} (s/conform ::mocks args)
-        mockings (normalize-mocking-params mocks)]
-    `(mocking* ~mockings (fn [] ~@body))))
+        mockings (->> mocks
+                      normalize-mocking-params
+                      (mapcat to-function)
+                      vec)]
+    `(with-redefs ~mockings
+       ~@body)))

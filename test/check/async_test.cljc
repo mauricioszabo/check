@@ -1,7 +1,7 @@
 (ns check.async-test
-   (:require [clojure.test :refer [deftest is]]
+   (:require [clojure.test :refer [deftest is] :as t]
              [clojure.core.async :as async :refer [>! timeout go <!]]
-             [check.async :refer [async-test await! promise-test]]
+             [check.async :refer [async-test await! promise-test] :as a]
              [check.core :refer [check]]
              [promesa.core :as p]
              [net.cgrand.macrovich :as macros]))
@@ -68,6 +68,7 @@
   (macros/case
    :cljs
    (promise-test "checking for promises"
-     (check (. js/Promise resolve 10) => 10)
-     (p/delay 100)
-     (check (. js/Promise resolve 10) => 10))))
+     (a/testing "awaits promises"
+      (check (. js/Promise resolve 10) => 10)
+      (p/delay 100)
+      (check (. js/Promise resolve 10) => 10)))))

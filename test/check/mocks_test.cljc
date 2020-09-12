@@ -1,7 +1,8 @@
 (ns check.mocks-test
   (:require [clojure.test :refer [deftest testing]]
             [check.core :refer [check]]
-            [check.mocks :refer [mocking]]))
+            [check.mocks :refer [mocking]]
+            [net.cgrand.macrovich :as macros]))
 
 (defn some-function [a b]
   (+ a b))
@@ -17,7 +18,8 @@
     (mocking
      (some-function 1 2) => 10
      ---
-     (check (some-function 0 0) =throws=> clojure.lang.ExceptionInfo))))
+     (check (some-function 0 0) =throws=> #?(:clj clojure.lang.ExceptionInfo
+                                             :cljs ExceptionInfo)))))
 
 (deftest mocking-more-than-one-arg
   (testing "mocking a single call of a function"
@@ -35,4 +37,5 @@
      ---
      (check (some-function 10 20) => 1)
      (check (some-function 10 20) => 2)
-     (check (some-function 10 20) =throws=> clojure.lang.ExceptionInfo))))
+     (check (some-function 10 20) =throws=> #?(:clj clojure.lang.ExceptionInfo
+                                                :cljs ExceptionInfo)))))
