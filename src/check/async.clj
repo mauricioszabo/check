@@ -1,102 +1,104 @@
 (ns check.async
-  (:require [clojure.string :as str]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.string :as str]
             [check.core :as core]
             [clojure.test :as test]
             [clojure.core.async :as async]
             [promesa.core :as p]
             [clojure.walk :as walk]
-            [net.cgrand.macrovich :as macros]))
+            [net.cgrand.macrovich :as macros]
+            [clojure.core.async.impl.protocols :as proto])
+  (:import [clojure.core.async.impl.protocols ReadPort]))
 
 (def ^:dynamic timeout 3000)
-(defmacro async-test
-  "Defines an async test. On Clojure, wraps all execution over a go-block.
-On ClojureScript, wraps execution on a go-block and also sets the `async`
-option. If the first argument of `cmds` is a map, it'll accept the following
-keys:
-
-:teardown - a sequence of commands that will tear down after the execution
-of every async test, both on success or on failure
-:timeout - the time that the async test will wait before timing out"
-  [description & cmds]
-  (let [opts (first cmds)
-        cmds (cond-> cmds (map? opts) rest)]
-    (macros/case
-      :cljs
-      `(test/async done#
-         (test/testing ~description
-           (async/go
-            (let [mark-as-done# (delay
-                                  ~(if-let [teardown (:teardown opts)]
-                                     teardown)
-                                  (done#))]
-              (js/setTimeout (fn []
-                               (when-not (realized? mark-as-done#)
-                                 (test/is (throw (ex-info "Async test error - not finalized" {})))
-                                 @mark-as-done#))
-                             ~(:timeout opts 3000))
-              ~@cmds
-              @mark-as-done#))))
-      :clj
-      `(test/testing ~description
-         (binding [timeout ~(:timeout opts 3000)]
-           (try
-             ~@cmds
-             (finally
-               ~(if-let [teardown (:teardown opts)]
-                  teardown))))))))
-
-(defmacro await-all! [chans]
-  (macros/case
-    :cljs `(async/alts! ~chans)
-    :clj `(async/alts!! ~chans)))
-
-(defn- to-chan [left]
-  `(let [chan# (async/promise-chan)]
-       (.then ~left (fn [result#] (async/put! chan# result#)))
-       chan#))
-
-(defn get-from-channel! [cljs? chan]
-  (if cljs?
-   `(async/<! (if (instance? js/Promise ~chan)
-                ~(to-chan chan)
-                ~chan))
-   `(first (async/alts!! [~chan (async/timeout timeout)]))))
+; (defmacro await-all! [chans]
+;   (macros/case
+;     :cljs `(async/alts! ~chans)
+;     :clj `(async/alts!! ~chans)))
+;
+; (defn- to-chan [left]
+;   `(let [chan# (async/promise-chan)]
+;        (.then ~left (fn [result#] (async/put! chan# result#)))
+;        chan#))
+;
+(defn- get-from-channel! [chan]
+  `(cond
+     (p/promise? ~chan) (async/go @~chan)
+     (instance? ReadPort ~chan) ~chan
+     :else (async/go ~chan)))
+  ; (if cljs?
+  ;  `(async/<! (if (instance? js/Promise ~chan)
+  ;               ~(to-chan chan)
+  ;               ~chan))
+  ;  `(first (async/alts!! [~chan (async/timeout timeout)]))))
 
 (defmacro await! [chan]
   (macros/case
-   :cljs (get-from-channel! true chan)
-   :clj (get-from-channel! false chan)))
+   :cljs `(to-promise ~chan)
+   :clj `(async/<!! ~(get-from-channel! chan))))
 
-(defmethod core/assert-arrow '=resolves=> [cljs? left _ right]
-  `(let [value# (get-from-channel! ~cljs? ~left)]
-     (core/assert-arrow ~cljs? value# '=> ~right)))
-
-(defn- wrap-in-prom [body]
-  (let [resolve (fn [[check left arrow right]]
-                  (let [sym (gensym "res")]
-                    `(p/let [~sym ~left]
-                       (~check ~sym ~arrow ~right))))]
-    (walk/postwalk
-     #(cond-> %
-              (and (list? %) (or (= 'check (first %))
-                                 (str/ends-with? (-> % first str) "/check")))
-              resolve)
-     body)))
-
+; (defn- wrap-in-prom [body]
+;   (let [resolve (fn [[check left arrow right]]
+;                   (let [sym (gensym "res")]
+;                     `(p/let [~sym ~left]
+;                        (~check ~sym ~arrow ~right))))]
+;     (walk/postwalk
+;      #(cond-> %
+;               (and (list? %) (or (= 'check (first %))
+;                                  (str/ends-with? (-> % first str) "/check")))
+;               resolve)
+;      body)))
+;
 (defmacro testing [description & body]
-  `(test/testing ~description (p/do! ~@body)))
-
-(defmacro promise-test [description & cmds]
   (macros/case
-    :cljs
-    (let [[opts cmds] (if (-> cmds first map?)
-                        [(first cmds) (rest cmds)]
-                        [{} cmds])
-          body (wrap-in-prom cmds)
-          tear (when-let [t (:teardown opts)]
-                 `(fn [] ~t))
-          time (:timeout opts 2000)]
-      `(test/async done#
-         (test/testing ~description
-           (promise-test* (p/do! ~@body) done# ~tear ~time))))
-    :clj `(async-test ~description ~@cmds)))
+   :clj `(test/testing ~description ~@body)
+   :cljs `(test/testing ~description (p/do! ~@body))))
+
+(defn async-test* [description timeout teardown-delay go-thread]
+  (test/testing description
+    (let [[res] (async/alts!! [go-thread
+                               (async/thread (async/<!! (async/timeout timeout)) ::timeout)]
+                             :priority true)]
+      (case res
+        ::ok @teardown-delay
+        ::timeout (do
+                    @teardown-delay
+                    (throw (ex-info "Async error - not finalized" {:timeout timeout})))
+        (do
+          @teardown-delay
+          (throw res))))))
+
+(s/def ::description string?)
+(s/def ::teardown fn?)
+(s/def ::timeout int?)
+(s/def ::params map? #_(s/keys :opt-un [::timeout ::teardown]))
+(s/def ::body any?)
+(s/def ::full-params
+  (s/cat :description ::description
+         :params (s/? ::params)
+         :body (s/* ::body)))
+
+(defmacro async-test [ & params]
+  (let [{:keys [description params body]} (s/conform ::full-params params)
+        timeout (:timeout params 2000)
+        teardown (:teardown params nil)]
+        ; done-gen (gensym "done-")]
+        ; done]
+    (macros/case
+     :clj `(async-test* ~description ~timeout
+             (delay ~teardown)
+             (async/thread (try ~@body ::ok (catch Throwable t# t#))))
+     :cljs `(async-test* ~description ~timeout (fn [] ~teardown) ~body))))
+(s/fdef async-test :args (s/cat :params ::full-params))
+
+(defmacro check [left arrow right]
+  (let [cljs? (macros/case :cljs true :clj false)
+        lft (gensym "left-")
+        rgt (gensym "right-")]
+    (macros/case
+     :clj `(let [~lft (await! ~left)
+                 ~rgt (await! ~right)]
+             (test/do-report ~(core/assert-arrow cljs? lft arrow rgt)))
+     :cljs `(p/let [~lft (await! ~left) ~rgt (await! ~right)]
+              (test/do-report ~(core/assert-arrow cljs? lft arrow rgt))
+              :done))))

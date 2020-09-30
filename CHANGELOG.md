@@ -3,6 +3,11 @@
 ## MISSING
 - Documentation
 
+## 0.2.0
+- Changed async-test to use Promises on CLJS and go-blocks on CLJ
+- Added a check.async/check that will await promises or take go-blocks
+- Removing `=resolves=>` arrow
+
 ## 0.1.1
 - First cut of mocks library
 
