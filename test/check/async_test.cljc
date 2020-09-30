@@ -1,7 +1,7 @@
 (ns check.async-test
    (:require [clojure.test :refer [deftest is] :as t]
              [clojure.core.async :as async :refer [>! timeout go <!]]
-             [check.async :refer [async-test await! check]]
+             [check.async :refer [async-test await! check testing]]
              ; [check.core :refer [check]]
              [promesa.core :as p]
              [net.cgrand.macrovich :as macros]
@@ -55,7 +55,8 @@
       (go
        (<! (timeout 100))
        (>! c "ok"))
-      (check c => "ok")))
+      (testing "will check"
+        (check c => "ok"))))
   #?(:clj (check @teardown => :done)))
 
 (macros/case

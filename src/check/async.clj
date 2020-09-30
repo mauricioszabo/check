@@ -49,8 +49,10 @@
 ;               resolve)
 ;      body)))
 ;
-; (defmacro testing [description & body]
-;   `(test/testing ~description (p/do! ~@body)))
+(defmacro testing [description & body]
+  (macros/case
+   :clj `(test/testing ~description ~@body)
+   :cljs `(test/testing ~description (p/do! ~@body))))
 
 (defn async-test* [description timeout teardown-delay go-thread]
   (test/testing description
