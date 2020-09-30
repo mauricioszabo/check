@@ -52,7 +52,7 @@
    :cljs
    `(try
       (do-report ~(assert-arrow true left arrow right))
-      (catch js/Object t#
+      (catch :default t#
         (do-report {:type :fail
                     :message (str "Expected " (quote ~left) (quote ~arrow) (quote ~right))
                     :expected ~right
