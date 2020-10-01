@@ -63,3 +63,9 @@
  :cljs
  (deftest after-teardown
    (check @teardown => :done)))
+
+#_
+(deftest promise-rejection
+  (async-test "promise error"
+    (let [prom (p/rejected (ex-info "a error" {}))]
+      (check prom => :done))))
