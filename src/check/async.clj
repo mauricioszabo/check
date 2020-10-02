@@ -70,7 +70,9 @@
     (macros/case
      :clj `(let [~lft (await! ~left)
                  ~rgt (await! ~right)]
-             (test/do-report ~(core/assert-arrow cljs? lft arrow rgt)))
+             (test/do-report (assoc ~(core/assert-arrow cljs? lft arrow rgt)
+                                    :expect (quote ~right))))
      :cljs `(p/let [~lft (await! ~left) ~rgt (await! ~right)]
-              (test/do-report ~(core/assert-arrow cljs? lft arrow rgt))
+              (test/do-report (assoc ~(core/assert-arrow cljs? lft arrow rgt)
+                                     :expected (quote ~right)))
               :done))))
