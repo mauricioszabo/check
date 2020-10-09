@@ -13,7 +13,7 @@
 (def ^:dynamic timeout 3000)
 (defn- get-from-channel! [chan]
   `(cond
-     (p/promise? ~chan) (async/go @~chan)
+     (promesa.core/promise? ~chan) (async/go @~chan)
      (instance? ReadPort ~chan) ~chan
      :else (async/go ~chan)))
 
@@ -25,7 +25,7 @@
 (defmacro testing [description & body]
   (macros/case
    :clj `(test/testing ~description ~@body)
-   :cljs `(test/testing ~description (p/do! ~@body))))
+   :cljs `(test/testing ~description (promesa.core/do! ~@body))))
 
 (defn async-test* [description timeout teardown-delay go-thread]
   (test/testing description
@@ -60,7 +60,7 @@
              (delay ~teardown)
              (async/thread (try ~@body ::ok (catch Throwable t# t#))))
      :cljs `(async-test* ~description ~timeout (fn [] ~teardown)
-              (p/do! ~@body)))))
+              (promesa.core/do! ~@body)))))
 (s/fdef async-test :args (s/cat :params ::full-params))
 
 (defmacro check [left arrow right]
@@ -72,7 +72,7 @@
                  ~rgt (await! ~right)]
              (test/do-report (assoc ~(core/assert-arrow cljs? lft arrow rgt)
                                     :expect (quote ~right))))
-     :cljs `(p/let [~lft (await! ~left) ~rgt (await! ~right)]
+     :cljs `(promesa.core/let [~lft (await! ~left) ~rgt (await! ~right)]
               (test/do-report (assoc ~(core/assert-arrow cljs? lft arrow rgt)
                                      :expected (quote ~right)))
               :done))))
