@@ -4,6 +4,7 @@
 - Documentation
 
 ## 0.2.0
+- Kept `check.async` as `check.async-old` to ease updates
 - Changed async-test to use Promises on CLJS and go-blocks on CLJ
 - Added a check.async/check that will await promises or take go-blocks
 - Removing `=resolves=>` arrow
