@@ -3,6 +3,7 @@
   (:require [clojure.string :as str]
             [expectations :refer [compare-expr ->failure-message in]]
             [clojure.test :refer [do-report]]
+            #?(:cljs [cljs.test])
             [net.cgrand.macrovich :as macros]
             [matcher-combinators.core :as c]
             [matcher-combinators.printer :as p]
