@@ -41,7 +41,7 @@
 
     [fun
      `(let [~@all-lets]
-        (fn ~fun [ & old-args#]
+        (fn ~(-> fun name symbol) [ & old-args#]
           (if-let [return# (get ~args+return old-args#)]
             (let [{:keys [~'fn ~'return]} return#]
               (cond
