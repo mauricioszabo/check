@@ -46,16 +46,16 @@
    `(try
       (do-report ~(assert-arrow false left arrow right))
       (catch java.lang.Throwable t#
-        (do-report {:type :fail
-                    :message (str "Expected " (quote ~left) (quote ~arrow) (quote ~right))
+        (do-report {:type :error
+                    :message (str "Expected " (quote ~left) " " (quote ~arrow) " " (quote ~right))
                     :expected ~right
                     :actual t#})))
    :cljs
    `(try
       (do-report ~(assert-arrow true left arrow right))
       (catch :default t#
-        (do-report {:type :fail
-                    :message (str "Expected " (quote ~left) (quote ~arrow) (quote ~right))
+        (do-report {:type :error
+                    :message (str "Expected " (quote ~left) " " (quote ~arrow) " " (quote ~right))
                     :expected ~right
                     :actual t#})))))
 
@@ -99,7 +99,7 @@
          {:type :pass
           :message '(~'check 'lft# => 'rgt#)}
          {:type :fail
-          :expected rgt#
+          :expected '~left
           :actual (symbol (:failure-message res#))}))
      {:type :error
       :expected ~right
