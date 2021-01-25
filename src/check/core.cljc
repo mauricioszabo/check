@@ -99,8 +99,8 @@
          {:type :pass
           :message '(~'check 'lft# => 'rgt#)}
          {:type :fail
-          :expected '~left
-          :actual (symbol (:failure-message res#))}))
+          :expected '~right
+          :actual (symbol (str (:failure-message res#)))}))
      {:type :error
       :expected ~right
       :actual (str "Matcher " '~matcher " is not implemented")}))
